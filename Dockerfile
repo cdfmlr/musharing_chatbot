@@ -7,7 +7,8 @@ FROM python:3.10.10-slim-bullseye AS builder
 WORKDIR /app
 
 # Install build dependencies
-RUN apt-get update && \
+RUN sed -i 's#http://deb.debian.org#https://mirrors.tuna.tsinghua.edu.cn#g' /etc/apt/sources.list && \
+    apt-get update && \
     apt-get install -y build-essential
 
 # Copy and install the dependencies
@@ -27,9 +28,10 @@ RUN	poetry run python -m spacy download en_core_web_sm
 # Arm64 wheel contains a debug / non stripped version of the .so library
 # - https://github.com/grpc/grpc/issues/29935
 # - https://command-not-found.com/strip
-RUN test $(uname -m) = 'aarch64' && \
+RUN if [ "$(uname -m)" = 'aarch64' ]; then \
     apt-get install -y binutils && \
-    strip -s -g -S -d --strip-debug /usr/local/lib/python3.10/site-packages/grpc/_cython/cygrpc.cpython-310-aarch64-linux-gnu.so
+    strip -s -g -S -d --strip-debug /usr/local/lib/python3.10/site-packages/grpc/_cython/cygrpc.cpython-310-aarch64-linux-gnu.so \
+    ; fi
 
 # Copy the source code
 COPY . .
