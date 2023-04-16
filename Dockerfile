@@ -23,7 +23,11 @@ RUN pip install poetry -i https://pypi.tuna.tsinghua.edu.cn/simple
 RUN poetry config virtualenvs.create false && \
     poetry install --no-dev --no-interaction --no-ansi --no-root
 
-RUN	poetry run python -m spacy download en_core_web_sm
+# TODO: uncomment this line if you are CDFMLR or uncomment + modify it for your own case
+#RUN echo '192.168.5.2 host.docker.internal' >> /etc/hosts
+
+# TODO: modify port 1000 to your own port to your local proxy
+RUN	HTTPS_PROXY=http://host.docker.internal:1000 poetry run python -m spacy download en_core_web_sm
 
 # Arm64 wheel contains a debug / non stripped version of the .so library
 # - https://github.com/grpc/grpc/issues/29935
@@ -56,5 +60,4 @@ COPY --from=builder /app /app
 # Start the server
 CMD cd /app && \
 	PYTHONPATH=$PYTHONPATH:. \
-	python musharing_chatbot --addr 0.0.0.0 --port 50051
-
+	python musharing_chatbot --muvtb-grpc-serv 0.0.0.0:50051
